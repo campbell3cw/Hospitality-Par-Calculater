@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Hospitality Linen PAR Calculator</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 600px;
+      margin: 40px auto;
+      padding: 20px;
+      background-color: #f9f9f9;
+      border-radius: 8px;
+    }
+    h1 {
+      text-align: center;
+    }
+    label {
+      display: block;
+      margin-top: 15px;
+    }
+    input {
+      width: 100%;
+      padding: 8px;
+      margin-top: 5px;
+      box-sizing: border-box;
+    }
+    button {
+      margin-top: 20px;
+      padding: 10px;
+      width: 100%;
+      background-color: #007BFF;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      font-size: 16px;
+    }
+    button:hover {
+      background-color: #0056b3;
+    }
+    .results {
+      margin-top: 30px;
+      padding: 15px;
+      background-color: #e9ecef;
+      border-radius: 5px;
+    }
+    .results h2 {
+      margin-top: 0;
+    }
+    .results ul {
+      list-style-type: none;
+      padding-left: 0;
+    }
+    .results li {
+      margin-bottom: 8px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Hospitality Linen PAR Calculator</h1>
+  <form id="parForm">
+    <label for="rooms">Number of Rooms:</label>
+    <input type="number" id="rooms" name="rooms" min="1" required>
+
+    <label for="bedsPerRoom">Beds per Room:</label>
+    <input type="number" id="bedsPerRoom" name="bedsPerRoom" min="1" required>
+
+    <label for="parLevel">Desired PAR Level (e.g., 3):</label>
+    <input type="number" id="parLevel" name="parLevel" min="1" step="0.25" required>
+
+    <button type="submit">Calculate Linen Needs</button>
+  </form>
+
+  <div class="results" id="results" style="display: none;">
+    <h2>Estimated Linen Requirements</h2>
+    <ul id="resultsList"></ul>
+  </div>
+
+  <script>
+    document.getElementById('parForm').addEventListener('submit', function(event) {
+      event.preventDefault();
+
+      const rooms = parseInt(document.getElementById('rooms').value, 10);
+      const bedsPerRoom = parseInt(document.getElementById('bedsPerRoom').value, 10);
+      const parLevel = parseFloat(document.getElementById('parLevel').value);
+
+      const totalBeds = rooms * bedsPerRoom;
+
+      // Define linen items with their usage per bed or per room
+      const linenItems = [
+        { name: 'Flat Sheets', perBed: 1 },
+        { name: 'Fitted Sheets', perBed: 1 },
+        { name: 'Pillowcases', perBed: 2 },
+        { name: 'Blankets', perBed: 1 },
+        { name: 'Bath Towels', perRoom: 2 },
+        { name: 'Hand Towels', perRoom: 2 },
+        { name: 'Washcloths', perRoom: 2 },
+        { name: 'Bath Mats', perRoom: 1 }
+      ];
+
+      const resultsList = document.getElementById('resultsList');
+      resultsList.innerHTML = '';
+
+      linenItems.forEach(item => {
+        let total = 0;
+        if (item.perBed) {
+          total = item.perBed * totalBeds * parLevel;
+        } else if (item.perRoom) {
+          total = item.perRoom * rooms * parLevel;
+        }
+        const li = document.createElement('li');
+        li.textContent = `${item.name}: ${Math.ceil(total)} units`;
+        resultsList.appendChild(li);
+      });
+
+      document.getElementById('results').style.display = 'block';
+    });
+  </script>
+</body>
+</html>
