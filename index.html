@@ -1,12 +1,15 @@
-<!DOCTYPE html>
-<html lang="en">
+<!-- Responsive styling, PDF export with branding, and logo added -->
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Liberty Linen PAR Calculator</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <style>
     body {
-      font-family: 'Segoe UI', Arial, sans-serif;
+      font-family: 'Inter', sans-serif;
       background: linear-gradient(to right, #f0f8ff, #e6f2ff);
       margin: 0;
       padding: 0;
@@ -19,6 +22,11 @@
       border-radius: 12px;
       box-shadow: 0 8px 24px rgba(0, 82, 204, 0.1);
       padding: 40px;
+    }
+    .logo {
+      display: block;
+      max-width: 240px;
+      margin: 0 auto 20px auto;
     }
     h1 {
       text-align: center;
@@ -111,200 +119,19 @@
     }
     .export-buttons {
       display: flex;
-      justify-content: center;
-      gap: 20px;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
       margin-top: 24px;
+    }
+    @media (min-width: 600px) {
+      .export-buttons {
+        flex-direction: row;
+        justify-content: center;
+      }
     }
   </style>
 </head>
 <body>
   <div class="container">
-    <h1>Liberty Linen PAR Calculator</h1>
-
-    <div class="section">
-      <h2>General Property Info</h2>
-      <div class="field-group">
-        <div class="field">
-          <label for="numRooms">Number of Guest Rooms</label>
-          <input type="number" id="numRooms" min="1" value="1" required />
-        </div>
-        <div class="field">
-          <label for="occupancy">Occupancy Rate (%)</label>
-          <input type="number" id="occupancy" min="0" max="100" value="100" />
-        </div>
-        <div class="field">
-          <label for="parLevel">Desired PAR Level</label>
-          <input type="number" id="parLevel" min="1" value="3" />
-        </div>
-      </div>
-    </div>
-
-    <div class="section">
-      <h2>Bedding Inventory</h2>
-      <div class="radio-toggle">
-        <label><input type="radio" name="sheetSetup" value="twoFlats" checked onchange="toggleFittedFields()" /> Two Flat Sheets</label>
-        <label><input type="radio" name="sheetSetup" value="flatPlusFitted" onchange="toggleFittedFields()" /> Flat + Fitted</label>
-      </div>
-      <div class="field-group">
-        <div class="field">
-          <label for="bedKing">King Beds</label>
-          <input type="number" id="bedKing" min="0" value="0" onchange="syncFitted('bedKing', 'fittedKing')" />
-        </div>
-        <div class="field">
-          <label for="bedCalKing">California King Beds</label>
-          <input type="number" id="bedCalKing" min="0" value="0" onchange="syncFitted('bedCalKing', 'fittedCalKing')" />
-        </div>
-        <div class="field">
-          <label for="bedQueen">Queen Beds</label>
-          <input type="number" id="bedQueen" min="0" value="0" onchange="syncFitted('bedQueen', 'fittedQueen')" />
-        </div>
-        <div class="field">
-          <label for="bedFull">Full/Double Beds</label>
-          <input type="number" id="bedFull" min="0" value="0" onchange="syncFitted('bedFull', 'fittedFull')" />
-        </div>
-        <div class="field">
-          <label for="bedTwin">Twin Beds</label>
-          <input type="number" id="bedTwin" min="0" value="0" onchange="syncFitted('bedTwin', 'fittedTwin')" />
-        </div>
-      </div>
-      <div class="field-group">
-        <div class="field">
-          <label for="fittedKing">Fitted King Sheets</label>
-          <input type="number" id="fittedKing" min="0" value="0" />
-        </div>
-        <div class="field">
-          <label for="fittedCalKing">Fitted Cal King Sheets</label>
-          <input type="number" id="fittedCalKing" min="0" value="0" />
-        </div>
-        <div class="field">
-          <label for="fittedQueen">Fitted Queen Sheets</label>
-          <input type="number" id="fittedQueen" min="0" value="0" />
-        </div>
-        <div class="field">
-          <label for="fittedFull">Fitted Full Sheets</label>
-          <input type="number" id="fittedFull" min="0" value="0" />
-        </div>
-        <div class="field">
-          <label for="fittedTwin">Fitted Twin Sheets</label>
-          <input type="number" id="fittedTwin" min="0" value="0" />
-        </div>
-      </div>
-      <div class="field-group">
-        <div class="field">
-          <label for="pillowKing">King Pillowcases</label>
-          <input type="number" id="pillowKing" min="0" value="0" />
-        </div>
-        <div class="field">
-          <label for="pillowQueen">Queen Pillowcases</label>
-          <input type="number" id="pillowQueen" min="0" value="0" />
-        </div>
-        <div class="field">
-          <label for="pillowStd">Standard Pillowcases</label>
-          <input type="number" id="pillowStd" min="0" value="0" />
-        </div>
-      </div>
-    </div>
-
-    <div class="section">
-      <h2>Terry Inventory</h2>
-      <div class="field-group">
-        <div class="field">
-          <label for="numBathrooms">Number of Bathrooms</label>
-          <input type="number" id="numBathrooms" min="1" value="1" required />
-        </div>
-        <div class="field">
-          <label for="towelBath">Bath Towels per Bathroom</label>
-          <input type="number" id="towelBath" min="0" value="0" />
-        </div>
-        <div class="field">
-          <label for="towelHand">Hand Towels per Bathroom</label>
-          <input type="number" id="towelHand" min="0" value="0" />
-        </div>
-        <div class="field">
-          <label for="towelWash">Washcloths per Bathroom</label>
-          <input type="number" id="towelWash" min="0" value="0" />
-        </div>
-        <div class="field">
-          <label for="towelMat">Bath Mats per Bathroom</label>
-          <input type="number" id="towelMat" min="0" value="0" />
-        </div>
-      </div>
-    </div>
-
-    <button onclick="calculateResults()">Calculate Requirements</button>
-
-    <div class="results" id="results" style="display:none;">
-      <h2>Estimated Linen Requirements</h2>
-      <ul id="resultsList"></ul>
-      <div class="export-buttons">
-        <button onclick="exportPDF()">Export to PDF</button>
-        <button onclick="emailResults()">Email Results</button>
-      </div>
-    </div>
-
-    <div class="branding">
-      Powered by Liberty Linen · Orange Beach, AL · <a href="https://www.libertylinen.com" target="_blank">libertylinen.com</a>
-    </div>
-
-    <script>
-      function toggleFittedFields() {
-        const useFitted = document.querySelector('input[name="sheetSetup"]:checked').value === 'flatPlusFitted';
-        const ids = ['fittedKing','fittedCalKing','fittedQueen','fittedFull','fittedTwin'];
-        ids.forEach(id => {
-          const field = document.getElementById(id);
-          field.disabled = !useFitted;
-          if (useFitted && field.value === '0') {
-            const sourceId = id.replace('fitted', 'bed');
-            field.value = document.getElementById(sourceId).value;
-          }
-        });
-      }
-
-      function syncFitted(sourceId, fittedId) {
-        const useFitted = document.querySelector('input[name="sheetSetup"]:checked').value === 'flatPlusFitted';
-        if (!useFitted) return;
-        const source = document.getElementById(sourceId);
-        const fitted = document.getElementById(fittedId);
-        if (fitted.value === '0') {
-          fitted.value = source.value;
-        }
-      }
-
-      function calculateResults() {
-        const baths = parseInt(document.getElementById('numBathrooms').value) || 1;
-        const results = {
-          'Bath Towels': parseInt(document.getElementById('towelBath').value) * baths || 0,
-          'Hand Towels': parseInt(document.getElementById('towelHand').value) * baths || 0,
-          'Washcloths': parseInt(document.getElementById('towelWash').value) * baths || 0,
-          'Bath Mats': parseInt(document.getElementById('towelMat').value) * baths || 0
-        };
-
-        const resultList = document.getElementById('resultsList');
-        resultList.innerHTML = '';
-        for (const key in results) {
-          const li = document.createElement('li');
-          li.textContent = `${key}: ${results[key]} units`;
-          resultList.appendChild(li);
-        }
-        document.getElementById('results').style.display = 'block';
-      }
-
-      function exportPDF() {
-        const text = document.getElementById('resultsList').innerText;
-        const blob = new Blob([text], { type: 'application/pdf' });
-        const link = document.createElement('a');
-        link.href = URL.createObjectURL(blob);
-        link.download = 'linen-par-results.pdf';
-        link.click();
-      }
-
-      function emailResults() {
-        const lines = [...document.querySelectorAll('#resultsList li')].map(li => li.textContent).join('%0D%0A');
-        window.location.href = `mailto:?subject=Liberty Linen PAR Results&body=${lines}`;
-      }
-
-      window.onload = toggleFittedFields;
-    </script>
-  </div>
-</body>
-</html>
+    <img src="/mnt/data/NEW%20-%20Liberty%20Logo%20Simple.pdf" alt="Liberty Linen Logo" class="logo" />
