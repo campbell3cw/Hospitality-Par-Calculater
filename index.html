@@ -88,12 +88,43 @@
     .results li {
       margin-bottom: 10px;
     }
+    .export-buttons {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 16px;
+      gap: 12px;
+    }
   </style>
 </head>
 <body>
   <div class="container">
     <h1>Hospitality Linen PAR Calculator</h1>
     <form id="parForm">
+      <div class="section">
+        <h2>Room & Bed Info</h2>
+        <div class="field-group">
+          <div class="field">
+            <label for="numRooms">Number of Rooms</label>
+            <input type="number" id="numRooms" name="numRooms" min="1" value="1" required />
+          </div>
+          <div class="field">
+            <label for="bedKing">King Beds</label>
+            <input type="number" id="bedKing" name="bedKing" min="0" value="0" />
+          </div>
+          <div class="field">
+            <label for="bedQueen">Queen Beds</label>
+            <input type="number" id="bedQueen" name="bedQueen" min="0" value="0" />
+          </div>
+        </div>
+        <div class="field">
+          <label for="sheetSetup">Sheet Setup</label>
+          <select id="sheetSetup" name="sheetSetup">
+            <option value="twoFlats">Two Flat Sheets</option>
+            <option value="flatPlusFitted">Flat + Fitted</option>
+          </select>
+        </div>
+      </div>
+
       <div class="section">
         <h2>Towel Inventory (per Bathroom)</h2>
         <div class="field-group">
@@ -114,13 +145,83 @@
             <input type="number" id="towelMat" name="towelMat" min="0" value="0" />
           </div>
         </div>
+        <div class="field">
+          <label for="numBathrooms">Number of Bathrooms</label>
+          <input type="number" id="numBathrooms" name="numBathrooms" min="1" value="1" required />
+        </div>
       </div>
+
+      <button type="submit">Calculate Requirements</button>
     </form>
 
     <div class="results" id="results" style="display: none;">
       <h2>Estimated Linen Requirements</h2>
       <ul id="resultsList"></ul>
+      <div class="export-buttons">
+        <button onclick="downloadPDF()">Export to PDF</button>
+        <button onclick="emailResults()">Email Results</button>
+      </div>
     </div>
   </div>
+
+  <script>
+    function calculateLinen() {
+      const rooms = parseInt(document.getElementById('numRooms').value, 10) || 1;
+      const bathrooms = parseInt(document.getElementById('numBathrooms').value, 10) || 1;
+      const bedKing = parseInt(document.getElementById('bedKing').value, 10) || 0;
+      const bedQueen = parseInt(document.getElementById('bedQueen').value, 10) || 0;
+      const sheetSetup = document.getElementById('sheetSetup').value;
+
+      const towelBath = parseInt(document.getElementById('towelBath').value, 10) || 0;
+      const towelHand = parseInt(document.getElementById('towelHand').value, 10) || 0;
+      const towelWash = parseInt(document.getElementById('towelWash').value, 10) || 0;
+      const towelMat = parseInt(document.getElementById('towelMat').value, 10) || 0;
+
+      const totalBeds = bedKing + bedQueen;
+      const sheetCount = sheetSetup === 'twoFlats' ? 2 : 2; // still 2 pieces per bed (1 fitted + 1 flat or 2 flats)
+      const totalSheets = sheetCount * totalBeds;
+      const pillowcases = 2 * totalBeds;
+
+      const results = {
+        'Sheets': totalSheets,
+        'Pillowcases': pillowcases,
+        'Bath Towels': towelBath * bathrooms,
+        'Hand Towels': towelHand * bathrooms,
+        'Washcloths': towelWash * bathrooms,
+        'Bath Mats': towelMat * bathrooms
+      };
+
+      return results;
+    }
+
+    document.getElementById('parForm').addEventListener('submit', function (e) {
+      e.preventDefault();
+      const results = calculateLinen();
+      const ul = document.getElementById('resultsList');
+      ul.innerHTML = '';
+      for (const key in results) {
+        const li = document.createElement('li');
+        li.textContent = `${key}: ${results[key]} units`;
+        ul.appendChild(li);
+      }
+      document.getElementById('results').style.display = 'block';
+    });
+
+    function downloadPDF() {
+      const results = calculateLinen();
+      const text = Object.entries(results).map(([k, v]) => `${k}: ${v} units`).join('\n');
+      const blob = new Blob([text], { type: 'application/pdf' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = 'linen_par_results.pdf';
+      link.click();
+    }
+
+    function emailResults() {
+      const results = calculateLinen();
+      const body = Object.entries(results).map(([k, v]) => `${k}: ${v} units`).join('%0D%0A');
+      window.location.href = `mailto:?subject=Linen PAR Results&body=${body}`;
+    }
+  </script>
 </body>
 </html>
