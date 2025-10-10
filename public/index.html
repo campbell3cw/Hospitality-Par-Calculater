@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Liberty Linen PAR Calculator</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <style>
+    :root{
+      --french-blue:#3A6EA5;
+      --slate-navy:#1E2A38;
+      --card:#ffffff;
+      --ink:#1E2A38;
+      --muted:#667085;
+      --soft:#f5f8ff;
+    }
+    *{box-sizing:border-box}
+    body{
+      font-family:'Inter',system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
+      background:linear-gradient(90deg,var(--french-blue),var(--slate-navy));
+      margin:0;padding:0;color:#333;
+    }
+    .container{
+      max-width:1100px;margin:40px auto;background:var(--card);
+      border-radius:14px;box-shadow:0 10px 30px rgba(0,0,0,.12);
+      padding:36px 32px;
+    }
+    .logo-header{display:flex;justify-content:center;align-items:center;gap:16px;margin-bottom:20px}
+    .logo-header img{max-width:260px;height:auto}
+    h1{margin:6px 0 26px;text-align:center;color:var(--slate-navy);font-size:2rem}
+    .section{
+      margin:28px 0 40px;background:var(--soft);border-left:6px solid var(--french-blue);
+      border-radius:8px;padding:20px 20px;
+    }
+    .section h2{margin:0;color:var(--french-blue);font-size:1.25rem}
+    .field-group{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:18px;margin-top:16px}
+    .field{display:flex;flex-direction:column}
+    .field label{font-weight:600;margin-bottom:6px;color:var(--ink)}
+    .field input,.field select{
+      padding:10px 12px;border:1px solid #d0d5dd;border-radius:8px;font-size:1rem;background:#fff
+    }
+    .field input[disabled]{background:#eef1f6}
+    .row-slim{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
+    .radio-toggle{display:flex;gap:22px;margin-top:10px;font-weight:600}
+    .radio-toggle input{margin-right:8px}
+    .hint{color:var(--muted);font-size:.9rem;margin-top:6px}
+    button{
+      background:var(--slate-navy);color:#fff;border:none;border-radius:8px;
+      padding:14px 18px;font-size:1.05rem;margin-top:18px;cursor:pointer
+    }
+    button:hover{background:var(--french-blue)}
+    .results{margin-top:28px;background:#e9f1ff;padding:18px;border-radius:8px;display:none}
+    .results h2{color:var(--slate-navy);margin:0 0 10px}
+    table.results-table{width:100%;border-collapse:collapse;margin-top:6px}
+    table.results-table th,table.results-table td{padding:10px;text-align:left}
+    table.results-table th{border-bottom:2px solid var(--slate-navy);color:var(--slate-navy)}
+    table.results-table td{border-bottom:1px solid #c9d4e8}
+    .export-buttons{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-top:16px}
+    .branding{text-align:center;margin-top:26px;color:#98a2b3;font-weight:500;font-size:.9rem}
+    a{color:var(--french-blue);text-decoration:none}
+    .subgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px}
+    .pillows-grid{margin-top:12px;row-gap:16px}
+    .pillows-item{display:grid;grid-template-columns:180px 1fr 1fr 1fr;gap:12px;align-items:end}
+    .pillows-item label{display:block;margin-bottom:6px}
+    .pillows-title{font-weight:700;color:var(--ink);margin-top:6px}
+    @media(max-width:720px){
+      .pillows-item{grid-template-columns:1fr}
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="logo-header">
+      <img src="https://raw.githubusercontent.com/campbell3cw/Hospitality-Par-Calculater/main/public/Liberty%20Logo.jpg" alt="Liberty Linen Logo">
+    </div>
+    <h1>Hospitality PAR Calculator</h1>
+
+    <div class="section">
+      <h2>General Property Info</h2>
+      <div class="field-group">
+        <div class="field"><label for="numRooms">Guest Rooms</label><input type="number" id="numRooms" value="1" min="0"/></div>
+        <div class="field"><label for="occupancy">Occupancy (%)</label><input type="number" id="occupancy" value="100" min="0" max="100"/></div>
+        <div class="field"><label for="parLevel">PAR Level</label><input type="number" id="parLevel" value="3" min="1"/></div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>Bedding Inventory</h2>
+      <div class="radio-toggle">
+        <label><input type="radio" name="sheetSetup" value="twoFlats" checked> Two Flat Sheets</label>
+        <label><input type="radio" name="sheetSetup" value="flatFitted"> Flat + Fitted</label>
+      </div>
+      <div class="field-group">
+        <div class="field"><label>King Beds</label><input type="number" id="bedKing" value="0" min="0"/></div>
+        <div class="field"><label>Cal King Beds</label><input type="number" id="bedCalKing" value="0" min="0"/></div>
+        <div class="field"><label>Queen Beds</label><input type="number" id="bedQueen" value="0" min="0"/></div>
+        <div class="field"><label>Full Beds</label><input type="number" id="bedFull" value="0" min="0"/></div>
+        <div class="field"><label>Twin Beds</label><input type="number" id="bedTwin" value="0" min="0"/></div>
+      </div>
+      <div class="hint">If "Flat + Fitted" is selected, Fitted quantities will mirror the flat counts for each bed size. Selecting "Two Flat Sheets" will grey out and zero Fitted fields.</div>
+      <div class="field-group">
+        <div class="field"><label>Fitted King</label><input type="number" id="fittedKing" value="0" min="0" /></div>
+        <div class="field"><label>Fitted Cal King</label><input type="number" id="fittedCalKing" value="0" min="0" /></div>
+        <div class="field"><label>Fitted Queen</label><input type="number" id="fittedQueen" value="0" min="0" /></div>
+        <div class="field"><label>Fitted Full</label><input type="number" id="fittedFull" value="0" min="0" /></div>
+        <div class="field"><label>Fitted Twin</label><input type="number" id="fittedTwin" value="0" min="0" /></div>
+      </div>
+
+      <div class="pillows-title">Pillowcases</div>
+      <div class="pillows-grid">
+        <div class="pillows-item">
+          <div class="field">
+            <label>King Pillowcases (computed)</label>
+            <input type="number" id="pillowKing" value="0" readonly />
+          </div>
+          <div class="field">
+            <label>Used for Beds</label>
+            <select id="mapKing">
+              <option value="King">King Beds</option>
+              <option value="CalKing">Cal King Beds</option>
+              <option value="Queen">Queen Beds</option>
+              <option value="Full">Full Beds</option>
+              <option value="Twin">Twin Beds</option>
+              <option value="All">All Beds</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Pillows per Bed</label>
+            <select id="ppbKing">
+              <option>1</option><option selected>2</option><option>3</option><option>4</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>—</label>
+            <div class="hint">Default: 2 pillows/bed on selected beds.</div>
+          </div>
+        </div>
+
+        <div class="pillows-item">
+          <div class="field">
+            <label>Queen Pillowcases (computed)</label>
+            <input type="number" id="pillowQueen" value="0" readonly />
+          </div>
+          <div class="field">
+            <label>Used for Beds</label>
+            <select id="mapQueen">
+              <option value="Queen" selected>Queen Beds</option>
+              <option value="King">King Beds</option>
+              <option value="CalKing">Cal King Beds</option>
+              <option value="Full">Full Beds</option>
+              <option value="Twin">Twin Beds</option>
+              <option value="All">All Beds</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Pillows per Bed</label>
+            <select id="ppbQueen">
+              <option>1</option><option selected>2</option><option>3</option><option>4</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>—</label>
+            <div class="hint">Override which beds use Queen pillowcases.</div>
+          </div>
+        </div>
+
+        <div class="pillows-item">
+          <div class="field">
+            <label>Standard Pillowcases (computed)</label>
+            <input type="number" id="pillowStd" value="0" readonly />
+          </div>
+          <div class="field">
+            <label>Used for Beds</label>
+            <select id="mapStd">
+              <option value="Queen">Queen Beds</option>
+              <option value="Full" selected>Full Beds</option>
+              <option value="Twin">Twin Beds</option>
+              <option value="King">King Beds</option>
+              <option value="CalKing">Cal King Beds</option>
+              <option value="All">All Beds</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Pillows per Bed</label>
+            <select id="ppbStd">
+              <option>1</option><option selected>2</option><option>3</option><option>4</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>—</label>
+            <div class="hint">Common: standard on Full/Twin; customize as needed.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>Terry Inventory</h2>
+      <div class="field-group">
+        <div class="field"><label>Bathrooms per Room</label><input type="number" id="numBathrooms" value="1" min="0"/></div>
+        <div class="field"><label>Bath Towels</label><input type="number" id="towelBath" value="0" min="0"/></div>
+        <div class="field"><label>Hand Towels</label><input type="number" id="towelHand" value="0" min="0"/></div>
+        <div class="field"><label>Washcloths</label><input type="number" id="towelWash" value="0" min="0"/></div>
+        <div class="field"><label>Bath Mats</label><input type="number" id="towelMat" value="0" min="0"/></div>
+      </div>
+    </div>
+
+    <button id="calcBtn" onclick="calculateResults()">Calculate Requirements</button>
+
+    <div class="results" id="results">
+      <h2>Estimated Linen Requirements</h2>
+      <div id="summaryInfo"></div>
+      <table class="results-table" id="resultsTable"></table>
+      <div class="export-buttons">
+        <button onclick="exportPDF()">Export to PDF</button>
+        <button onclick="emailResults()">Email Results</button>
+      </div>
+    </div>
+
+    <div class="branding">Powered by Liberty Linen · Orange Beach, AL · <a href="https://www.libertylinen.com">libertylinen.com</a></div>
+  </div>
+
+  <script>
+    // --- Helpers ---
+    function getBedsByKey(key){
+      const map = {
+        King: +document.getElementById('bedKing').value || 0,
+        CalKing: +document.getElementById('bedCalKing').value || 0,
+        Queen: +document.getElementById('bedQueen').value || 0,
+        Full: +document.getElementById('bedFull').value || 0,
+        Twin: +document.getElementById('bedTwin').value || 0,
+      };
+      if(key==='All'){
+        return map.King + map.CalKing + map.Queen + map.Full + map.Twin;
+      }
+      return map[key] || 0;
+    }
+
+    // --- Toggling fitted logic (mirror / zero & grey) ---
+    function toggleFitted(){
+      const selected = document.querySelector('input[name="sheetSetup"]:checked');
+      if(!selected) return;
+      const twoFlats = selected.value === 'twoFlats';
+      const mirror = !twoFlats;
+
+      const pairs = [
+        ['King','fittedKing','bedKing'],
+        ['CalKing','fittedCalKing','bedCalKing'],
+        ['Queen','fittedQueen','bedQueen'],
+        ['Full','fittedFull','bedFull'],
+        ['Twin','fittedTwin','bedTwin'],
+      ];
+
+      pairs.forEach(([size, fittedId, bedId])=>{
+        const fittedEl = document.getElementById(fittedId);
+        const bedEl = document.getElementById(bedId);
+        fittedEl.disabled = twoFlats;
+        if(mirror){
+          fittedEl.value = +bedEl.value || 0;
+        }else{
+          fittedEl.value = 0;
+        }
+      });
+    }
+
+    // --- Pillow auto compute based on mapping + pillows-per-bed ---
+    function syncPillowcases(){
+      const mapKing = document.getElementById('mapKing').value;
+      const mapQueen = document.getElementById('mapQueen').value;
+      const mapStd = document.getElementById('mapStd').value;
+      const ppbKing = +document.getElementById('ppbKing').value;
+      const ppbQueen = +document.getElementById('ppbQueen').value;
+      const ppbStd = +document.getElementById('ppbStd').value;
+
+      const kingBeds = getBedsByKey(mapKing);
+      const queenBeds = getBedsByKey(mapQueen);
+      const stdBeds = getBedsByKey(mapStd);
+
+      document.getElementById('pillowKing').value = kingBeds * ppbKing;
+      document.getElementById('pillowQueen').value = queenBeds * ppbQueen;
+      document.getElementById('pillowStd').value = stdBeds * ppbStd;
+    }
+
+    // --- Main calculation & render (hide zeros) ---
+    function calculateResults(){
+      const par = +document.getElementById('parLevel').value || 1;
+      const rooms = +document.getElementById('numRooms').value || 1;
+      const occ = +document.getElementById('occupancy').value || 100;
+      const results = { Bedding:{}, Terry:{} };
+      const setupRadio = document.querySelector('input[name="sheetSetup"]:checked');
+      const isFlatFitted = setupRadio && setupRadio.value === 'flatFitted';
+
+      // Bedding
+      ['King','CalKing','Queen','Full','Twin'].forEach(size=>{
+        const beds = +document.getElementById('bed'+size).value || 0;
+        if(beds>0){
+          if(isFlatFitted){
+            results.Bedding[`Flat Sheets (${size})`] = beds * par;
+            results.Bedding[`Fitted Sheets (${size})`] = (+document.getElementById('fitted'+size).value || 0) * par;
+          }else{
+            results.Bedding[`Flat Sheets (${size})`] = beds * 2 * par;
+          }
+        }
+      });
+
+      // Pillowcases (computed per mapping) — add only if >0
+      const k = (+document.getElementById('pillowKing').value || 0) * par;
+      const q = (+document.getElementById('pillowQueen').value || 0) * par;
+      const s = (+document.getElementById('pillowStd').value || 0) * par;
+      if(k>0) results.Bedding['King Pillowcases'] = k;
+      if(q>0) results.Bedding['Queen Pillowcases'] = q;
+      if(s>0) results.Bedding['Standard Pillowcases'] = s;
+
+      // Terry
+      const baths = +document.getElementById('numBathrooms').value || 1;
+      const tBath = (+document.getElementById('towelBath').value || 0) * baths * par;
+      const tHand = (+document.getElementById('towelHand').value || 0) * baths * par;
+      const tWash = (+document.getElementById('towelWash').value || 0) * baths * par;
+      const tMat  = (+document.getElementById('towelMat').value  || 0) * baths * par;
+      if(tBath>0) results.Terry['Bath Towels'] = tBath;
+      if(tHand>0) results.Terry['Hand Towels'] = tHand;
+      if(tWash>0) results.Terry['Washcloths'] = tWash;
+      if(tMat>0)  results.Terry['Bath Mats'] = tMat;
+
+      // Render
+      const table = document.getElementById('resultsTable');
+      const resultsDiv = document.getElementById('results');
+      const summaryInfo = document.getElementById('summaryInfo');
+      table.innerHTML = '';
+
+      Object.entries(results).forEach(([section, items])=>{
+        const present = Object.values(items).some(qty=>qty>0);
+        if(!present) return;
+        const headerRow = document.createElement('tr');
+        headerRow.innerHTML = `<th colspan="2">${section}</th>`;
+        table.appendChild(headerRow);
+
+        Object.entries(items).forEach(([item, qty])=>{
+          if(qty<=0) return; // hide zero rows
+          const row = document.createElement('tr');
+          row.innerHTML = `<td>${item}</td><td>${qty} units</td>`;
+          table.appendChild(row);
+        });
+      });
+
+      const date = new Date().toLocaleDateString();
+      summaryInfo.innerHTML = `<p><strong>Guest Rooms:</strong> ${rooms} | <strong>Occupancy:</strong> ${occ}% | <strong>PAR:</strong> ${par}</p><p><em>Generated on ${date}</em></p>`;
+      resultsDiv.style.display = 'block';
+    }
+
+    // --- PDF & Email ---
+    function exportPDF(){
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF();
+      const logo = "https://raw.githubusercontent.com/campbell3cw/Hospitality-Par-Calculater/main/public/Liberty%20Logo.jpg";
+
+      // Logo header
+      doc.addImage(logo,'JPEG',80,10,50,40);
+      let y=60;
+      doc.setFontSize(16);
+      doc.text('Liberty Linen - Estimated Linen Requirements',20,y); y+=10;
+      doc.setFontSize(11);
+
+      // Summary
+      document.querySelectorAll('#summaryInfo p').forEach(p=>{ doc.text(p.textContent,20,y); y+=8; });
+      y+=4;
+
+      // Table
+      document.querySelectorAll('#resultsTable tr').forEach(tr=>{
+        const cells = tr.querySelectorAll('th,td');
+        if(cells.length===1){ doc.setFont(undefined,'bold'); doc.text(cells[0].textContent,20,y); doc.setFont(undefined,'normal'); }
+        else { doc.text(cells[0].textContent,25,y); doc.text(cells[1].textContent,140,y); }
+        y+=8;
+      });
+
+      doc.setFontSize(10);
+      doc.text('*Estimates based on your inputs.',20,y+10);
+      doc.save('Liberty_Linen_PAR_Results.pdf');
+    }
+
+    function emailResults(){
+      const summary = document.getElementById('summaryInfo').innerText;
+      const rows = Array.from(document.querySelectorAll('#resultsTable tr')).map(r=>r.innerText).join('%0D%0A');
+      window.location.href = `mailto:?subject=Liberty Linen PAR Results&body=${encodeURIComponent(summary + '\\n' + rows)}`;
+    }
+
+    // --- Initialize ---
+    document.addEventListener('DOMContentLoaded',()=>{
+      // initial syncs
+      toggleFitted();
+      syncPillowcases();
+
+      // listeners
+      document.querySelectorAll('input[name="sheetSetup"]').forEach(r=>r.addEventListener('change',()=>{
+        toggleFitted();
+        syncPillowcases();
+      }));
+
+      // bed count changes affect fitted (when mirrored) and pillows
+      ['bedKing','bedCalKing','bedQueen','bedFull','bedTwin'].forEach(id=>{
+        const el = document.getElementById(id);
+        el.addEventListener('input',()=>{ toggleFitted(); syncPillowcases(); });
+      });
+
+      // pillow mapping / ppb changes
+      ['mapKing','mapQueen','mapStd','ppbKing','ppbQueen','ppbStd'].forEach(id=>{
+        document.getElementById(id).addEventListener('change',syncPillowcases);
+      });
+    });
+  </script>
+</body>
+</html>
