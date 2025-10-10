@@ -1,30 +1,39 @@
 <script>
-  // Toggle enable/disable of fitted sheet fields
   function toggleFitted() {
-    const isFlatFitted = document.querySelector('input[name="sheetSetup"]:checked').value === 'flatFitted';
+    const selected = document.querySelector('input[name="sheetSetup"]:checked');
+    if (!selected) return; // stop early if DOM not ready yet
+    const isFlatFitted = selected.value === 'flatFitted';
     document.querySelectorAll('[id^="fitted"]').forEach(el => {
       el.disabled = !isFlatFitted;
       if (!isFlatFitted) el.value = 0;
     });
   }
 
-  // Auto-fill pillowcase counts based on bed counts
   function syncPillowcases() {
-    const king = (+document.getElementById('bedKing').value || 0) + (+document.getElementById('bedCalKing').value || 0);
-    const other = (+document.getElementById('bedQueen').value || 0) + (+document.getElementById('bedFull').value || 0) + (+document.getElementById('bedTwin').value || 0);
-    document.getElementById('pillowKing').value = king * 2;
-    document.getElementById('pillowStd').value = other * 2;
+    const bedKing = document.getElementById('bedKing');
+    const bedCalKing = document.getElementById('bedCalKing');
+    const bedQueen = document.getElementById('bedQueen');
+    const bedFull = document.getElementById('bedFull');
+    const bedTwin = document.getElementById('bedTwin');
+    const pillowKing = document.getElementById('pillowKing');
+    const pillowStd = document.getElementById('pillowStd');
+
+    const king = (+bedKing.value || 0) + (+bedCalKing.value || 0);
+    const other = (+bedQueen.value || 0) + (+bedFull.value || 0) + (+bedTwin.value || 0);
+    pillowKing.value = king * 2;
+    pillowStd.value = other * 2;
   }
 
-  // Main calculation
   function calculateResults() {
     const par = +document.getElementById('parLevel').value || 1;
     const rooms = +document.getElementById('numRooms').value || 1;
     const occ = +document.getElementById('occupancy').value || 100;
     const results = { Bedding: {}, Terry: {} };
-    const isFlatFitted = document.querySelector('input[name="sheetSetup"]:checked').value === 'flatFitted';
-    const resultsDiv = document.getElementById('results');
+    const setupRadio = document.querySelector('input[name="sheetSetup"]:checked');
+    const isFlatFitted = setupRadio && setupRadio.value === 'flatFitted';
+
     const table = document.getElementById('resultsTable');
+    const resultsDiv = document.getElementById('results');
     const summaryInfo = document.getElementById('summaryInfo');
 
     // --- Bedding ---
@@ -69,7 +78,6 @@
     resultsDiv.style.display = 'block';
   }
 
-  // PDF export
   function exportPDF() {
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF();
@@ -91,17 +99,16 @@
     doc.save('Liberty_Linen_PAR_Results.pdf');
   }
 
-  // Email results
   function emailResults() {
     const summary = document.getElementById('summaryInfo').innerText;
     const rows = Array.from(document.querySelectorAll('#resultsTable tr')).map(r => r.innerText).join('%0D%0A');
     window.location.href = `mailto:?subject=Liberty Linen PAR Results&body=${encodeURIComponent(summary + '\n' + rows)}`;
   }
 
-  // Initialize defaults on load
-  window.onload = () => {
+  // Run only after full DOM ready
+  document.addEventListener('DOMContentLoaded', () => {
     toggleFitted();
     syncPillowcases();
     document.querySelectorAll('input[name="sheetSetup"]').forEach(r => r.addEventListener('change', toggleFitted));
-  };
+  });
 </script>
