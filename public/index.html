@@ -116,82 +116,98 @@
       pillowStd.value = other * 2;
     }
 
-    function calculateResults() {
-      const par = +parLevel.value || 1;
-      const rooms = +numRooms.value || 1;
-      const occ = +occupancy.value || 100;
-      const results = { Bedding: {}, Terry: {} };
-      const isFlatFitted = document.querySelector('input[name="sheetSetup"]:checked').value === 'flatFitted';
+ <script>
+  function toggleFitted() {
+    const isFlatFitted = document.querySelector('input[name="sheetSetup"]:checked').value === 'flatFitted';
+    document.querySelectorAll('[id^="fitted"]').forEach(el => el.disabled = !isFlatFitted);
+  }
 
-      ['King','CalKing','Queen','Full','Twin'].forEach(size => {
-        const beds = +document.getElementById('bed'+size).value || 0;
-        if (beds) {
-          if (isFlatFitted) {
-            const fitted = +document.getElementById('fitted'+size).value || 0;
-            results.Bedding[`Flat Sheets (${size})`] = beds * par;
-            results.Bedding[`Fitted Sheets (${size})`] = fitted * par;
-          } else {
-            results.Bedding[`Flat Sheets (${size})`] = beds * 2 * par;
-          }
+  function syncPillowcases() {
+    const king = (+bedKing.value || 0) + (+bedCalKing.value || 0);
+    const other = (+bedQueen.value || 0) + (+bedFull.value || 0) + (+bedTwin.value || 0);
+    pillowKing.value = king * 2;
+    pillowStd.value = other * 2;
+  }
+
+  function calculateResults() {
+    const par = +parLevel.value || 1;
+    const rooms = +numRooms.value || 1;
+    const occ = +occupancy.value || 100;
+    const results = { Bedding: {}, Terry: {} };
+    const isFlatFitted = document.querySelector('input[name="sheetSetup"]:checked').value === 'flatFitted';
+
+    ['King','CalKing','Queen','Full','Twin'].forEach(size => {
+      const beds = +document.getElementById('bed'+size).value || 0;
+      if (beds) {
+        if (isFlatFitted) {
+          const fitted = +document.getElementById('fitted'+size).value || 0;
+          results.Bedding[`Flat Sheets (${size})`] = beds * par;
+          results.Bedding[`Fitted Sheets (${size})`] = fitted * par;
+        } else {
+          results.Bedding[`Flat Sheets (${size})`] = beds * 2 * par;
         }
+      }
+    });
+
+    results.Bedding['King Pillowcases'] = +pillowKing.value * par;
+    results.Bedding['Queen Pillowcases'] = +pillowQueen.value * par;
+    results.Bedding['Standard Pillowcases'] = +pillowStd.value * par;
+
+    const baths = +numBathrooms.value || 1;
+    results.Terry['Bath Towels'] = +towelBath.value * baths * par;
+    results.Terry['Hand Towels'] = +towelHand.value * baths * par;
+    results.Terry['Washcloths'] = +towelWash.value * baths * par;
+    results.Terry['Bath Mats'] = +towelMat.value * baths * par;
+
+    const table = document.getElementById('resultsTable');
+    const resultsDiv = document.getElementById('results');
+    const summaryInfo = document.getElementById('summaryInfo');
+
+    table.innerHTML = '';
+    Object.entries(results).forEach(([section, items]) => {
+      const headerRow = document.createElement('tr');
+      headerRow.innerHTML = `<th colspan='2'>${section}</th>`;
+      table.appendChild(headerRow);
+      Object.entries(items).forEach(([item, qty]) => {
+        const row = document.createElement('tr');
+        row.innerHTML = `<td>${item}</td><td>${qty} units</td>`;
+        table.appendChild(row);
       });
+    });
 
-      results.Bedding['King Pillowcases'] = +pillowKing.value * par;
-      results.Bedding['Queen Pillowcases'] = +pillowQueen.value * par;
-      results.Bedding['Standard Pillowcases'] = +pillowStd.value * par;
+    const date = new Date().toLocaleDateString();
+    summaryInfo.innerHTML = `<p><strong>Guest Rooms:</strong> ${rooms} | <strong>Occupancy:</strong> ${occ}% | <strong>PAR:</strong> ${par}</p><p><em>Generated on ${date}</em></p>`;
+    resultsDiv.style.display = 'block';
+  }
 
-      const baths = +numBathrooms.value || 1;
-      results.Terry['Bath Towels'] = +towelBath.value * baths * par;
-      results.Terry['Hand Towels'] = +towelHand.value * baths * par;
-      results.Terry['Washcloths'] = +towelWash.value * baths * par;
-      results.Terry['Bath Mats'] = +towelMat.value * baths * par;
+  function exportPDF() {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+    let y = 20;
+    doc.setFontSize(16);
+    doc.text('Liberty Linen - Estimated Linen Requirements', 20, y);
+    y += 10;
+    doc.setFontSize(11);
+    document.querySelectorAll('#summaryInfo p').forEach(p => { doc.text(p.textContent, 20, y); y += 8; });
+    y += 5;
+    document.querySelectorAll('#resultsTable tr').forEach(tr => {
+      const cells = tr.querySelectorAll('th, td');
+      if (cells.length === 1) { doc.setFont(undefined, 'bold'); doc.text(cells[0].textContent, 20, y); doc.setFont(undefined, 'normal'); }
+      else { doc.text(cells[0].textContent, 25, y); doc.text(cells[1].textContent, 120, y); }
+      y += 8;
+    });
+    doc.setFontSize(10);
+    doc.text('*These values are estimates based on your inputs.', 20, y + 10);
+    doc.save('Liberty_Linen_PAR_Results.pdf');
+  }
 
-      const table = document.getElementById('resultsTable');
-      table.innerHTML = '';
-      Object.entries(results).forEach(([section, items]) => {
-        const headerRow = document.createElement('tr');
-        headerRow.innerHTML = `<th colspan='2'>${section}</th>`;
-        table.appendChild(headerRow);
-        Object.entries(items).forEach(([item, qty]) => {
-          const row = document.createElement('tr');
-          row.innerHTML = `<td>${item}</td><td>${qty} units</td>`;
-          table.appendChild(row);
-        });
-      });
+  function emailResults() {
+    const summary = document.getElementById('summaryInfo').innerText;
+    const rows = Array.from(document.querySelectorAll('#resultsTable tr')).map(r => r.innerText).join('%0D%0A');
+    window.location.href = `mailto:?subject=Liberty Linen PAR Results&body=${encodeURIComponent(summary + '\n' + rows)}`;
+  }
 
-      const date = new Date().toLocaleDateString();
-      summaryInfo.innerHTML = `<p><strong>Guest Rooms:</strong> ${rooms} | <strong>Occupancy:</strong> ${occ}% | <strong>PAR:</strong> ${par}</p><p><em>Generated on ${date}</em></p>`;
-      resultsDiv.style.display = 'block';
-    }
-
-    function exportPDF() {
-      const { jsPDF } = window.jspdf;
-      const doc = new jsPDF();
-      let y = 20;
-      doc.setFontSize(16);
-      doc.text('Liberty Linen - Estimated Linen Requirements', 20, y);
-      y += 10;
-      doc.setFontSize(11);
-      document.querySelectorAll('#summaryInfo p').forEach(p => { doc.text(p.textContent, 20, y); y += 8; });
-      y += 5;
-      document.querySelectorAll('#resultsTable tr').forEach(tr => {
-        const cells = tr.querySelectorAll('th, td');
-        if (cells.length === 1) { doc.setFont(undefined, 'bold'); doc.text(cells[0].textContent, 20, y); doc.setFont(undefined, 'normal'); }
-        else { doc.text(cells[0].textContent, 25, y); doc.text(cells[1].textContent, 120, y); }
-        y += 8;
-      });
-      doc.setFontSize(10);
-      doc.text('*These values are estimates based on your inputs.', 20, y + 10);
-      doc.save('Liberty_Linen_PAR_Results.pdf');
-    }
-
-    function emailResults() {
-      const summary = summaryInfo.innerText;
-      const rows = Array.from(document.querySelectorAll('#resultsTable tr')).map(r => r.innerText).join('%0D%0A');
-      window.location.href = `mailto:?subject=Liberty Linen PAR Results&body=${encodeURIComponent(summary + '\n' + rows)}`;
-    }
-
-    window.onload = () => { toggleFitted(); syncPillowcases(); };
-  </script>
+  window.onload = () => { toggleFitted(); syncPillowcases(); };
+</script>
 </body>
 </html>
