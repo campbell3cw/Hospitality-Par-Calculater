@@ -1,12 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Hospitality Linen PAR Calculator</title>
   <style>
     body {
       font-family: Arial, sans-serif;
-      max-width: 600px;
+      max-width: 800px;
       margin: 40px auto;
       padding: 20px;
       background-color: #f9f9f9;
@@ -14,33 +15,37 @@
     }
     h1 {
       text-align: center;
+      margin-bottom: 30px;
+    }
+    .form-group {
+      margin-bottom: 20px;
     }
     label {
       display: block;
-      margin-top: 15px;
+      font-weight: bold;
+      margin-bottom: 6px;
     }
-    input {
+    input, select {
       width: 100%;
       padding: 8px;
-      margin-top: 5px;
       box-sizing: border-box;
     }
     button {
-      margin-top: 20px;
-      padding: 10px;
+      padding: 12px;
       width: 100%;
       background-color: #007BFF;
       color: white;
       border: none;
       border-radius: 4px;
       font-size: 16px;
+      cursor: pointer;
     }
     button:hover {
       background-color: #0056b3;
     }
     .results {
       margin-top: 30px;
-      padding: 15px;
+      padding: 20px;
       background-color: #e9ecef;
       border-radius: 5px;
     }
@@ -48,7 +53,7 @@
       margin-top: 0;
     }
     .results ul {
-      list-style-type: none;
+      list-style: none;
       padding-left: 0;
     }
     .results li {
@@ -59,16 +64,55 @@
 <body>
   <h1>Hospitality Linen PAR Calculator</h1>
   <form id="parForm">
-    <label for="rooms">Number of Rooms:</label>
-    <input type="number" id="rooms" name="rooms" min="1" required>
+    <div class="form-group">
+      <label for="numRooms">Number of Rooms</label>
+      <input type="number" id="numRooms" name="numRooms" min="1" required />
+    </div>
 
-    <label for="bedsPerRoom">Beds per Room:</label>
-    <input type="number" id="bedsPerRoom" name="bedsPerRoom" min="1" required>
+    <div class="form-group">
+      <label for="bedConfig">Beds Configuration (e.g. “2 king, 5 queen, 3 twin”)</label>
+      <input type="text" id="bedConfig" name="bedConfig" placeholder="e.g. 5 king, 10 queen" />
+    </div>
 
-    <label for="parLevel">Desired PAR Level (e.g., 3):</label>
-    <input type="number" id="parLevel" name="parLevel" min="1" step="0.25" required>
+    <div class="form-group">
+      <label for="sheetSetup">Sheet Setup</label>
+      <select id="sheetSetup" name="sheetSetup">
+        <option value="flatOnly">Two Flat Sheets</option>
+        <option value="fittedPlusFlat">Fitted + Flat</option>
+      </select>
+    </div>
 
-    <button type="submit">Calculate Linen Needs</button>
+    <div class="form-group">
+      <label for="numBathrooms">Number of Bathrooms / Rooms</label>
+      <input type="number" id="numBathrooms" name="numBathrooms" min="1" required />
+    </div>
+
+    <div class="form-group">
+      <label for="towelsPerBathroom">Towels per Bathroom (Bath + Hand + Washcloths)</label>
+      <input type="number" id="towelsPerBathroom" name="towelsPerBathroom" min="1" required />
+    </div>
+
+    <div class="form-group">
+      <label for="occupancyRate">Occupancy Rate (%)</label>
+      <input type="number" id="occupancyRate" name="occupancyRate" min="1" max="100" step="0.1" required />
+    </div>
+
+    <div class="form-group">
+      <label for="changeFrequency">Linen Change Frequency (days)</label>
+      <input type="number" id="changeFrequency" name="changeFrequency" min="1" required />
+    </div>
+
+    <div class="form-group">
+      <label for="turnaroundTime">Laundry Turnaround Time (days)</label>
+      <input type="number" id="turnaroundTime" name="turnaroundTime" min="0" required />
+    </div>
+
+    <div class="form-group">
+      <label for="lossRate">Loss / Damage Rate (%)</label>
+      <input type="number" id="lossRate" name="lossRate" min="0" max="100" step="0.1" required />
+    </div>
+
+    <button type="submit">Calculate Requirements</button>
   </form>
 
   <div class="results" id="results" style="display: none;">
@@ -77,42 +121,95 @@
   </div>
 
   <script>
-    document.getElementById('parForm').addEventListener('submit', function(event) {
-      event.preventDefault();
+    document.getElementById('parForm').addEventListener('submit', function (e) {
+      e.preventDefault();
 
-      const rooms = parseInt(document.getElementById('rooms').value, 10);
-      const bedsPerRoom = parseInt(document.getElementById('bedsPerRoom').value, 10);
-      const parLevel = parseFloat(document.getElementById('parLevel').value);
+      // Fetch form values
+      const numRooms = parseFloat(document.getElementById('numRooms').value);
+      const bedConfigText = document.getElementById('bedConfig').value.trim();
+      const sheetSetup = document.getElementById('sheetSetup').value;
+      const numBathrooms = parseFloat(document.getElementById('numBathrooms').value);
+      const towelsPerBathroom = parseFloat(document.getElementById('towelsPerBathroom').value);
+      const occupancyRate = parseFloat(document.getElementById('occupancyRate').value) / 100;
+      const changeFreq = parseFloat(document.getElementById('changeFrequency').value);
+      const turnaround = parseFloat(document.getElementById('turnaroundTime').value);
+      const lossRate = parseFloat(document.getElementById('lossRate').value) / 100;
 
-      const totalBeds = rooms * bedsPerRoom;
+      // Parse bedConfig text into count by type (simple parse, can be improved)
+      // E.g. "5 king, 10 queen" → { king:5, queen:10 }
+      function parseBedConfig(text) {
+        const parts = text.split(',');
+        const result = {};
+        parts.forEach(part => {
+          const trimmed = part.trim();
+          if (!trimmed) return;
+          const [num, type] = trimmed.split(' ');
+          if (num && type) {
+            result[type.toLowerCase()] = parseFloat(num);
+          }
+        });
+        return result;
+      }
+      const bedConfig = parseBedConfig(bedConfigText);
 
-      // Define linen items with their usage per bed or per room
-      const linenItems = [
-        { name: 'Flat Sheets', perBed: 1 },
-        { name: 'Fitted Sheets', perBed: 1 },
-        { name: 'Pillowcases', perBed: 2 },
-        { name: 'Blankets', perBed: 1 },
-        { name: 'Bath Towels', perRoom: 2 },
-        { name: 'Hand Towels', perRoom: 2 },
-        { name: 'Washcloths', perRoom: 2 },
-        { name: 'Bath Mats', perRoom: 1 }
-      ];
+      // Sum total beds
+      let totalBeds = 0;
+      for (const t in bedConfig) {
+        totalBeds += bedConfig[t];
+      }
+      // If bedConfig empty, fallback: assume 1 bed per room
+      if (totalBeds === 0) {
+        totalBeds = numRooms;
+      }
 
-      const resultsList = document.getElementById('resultsList');
-      resultsList.innerHTML = '';
+      // Base usage per full change (assuming full occupancy)
+      // Sheets:
+      // If “two flat sheets” mode: 2 flat sheets per bed
+      // If “fitted + flat”: 1 fitted + 1 flat per bed
+      const sheetsPerBed = (sheetSetup === 'flatOnly') ? 2 : 2;  // count 2 total (one flat, one fitted or two flats)
+      const pillowcasesPerBed = 2;  // always 2 pillowcases
+      // Towels etc per bathroom
+      // We'll treat towels per bathroom as total towels (bath + hand + wash) per bathroom
 
-      linenItems.forEach(item => {
-        let total = 0;
-        if (item.perBed) {
-          total = item.perBed * totalBeds * parLevel;
-        } else if (item.perRoom) {
-          total = item.perRoom * rooms * parLevel;
-        }
+      // Baseline sets needed per “full change day”
+      const sheetsNeededBaseline = totalBeds * sheetsPerBed;
+      const pillowcasesNeededBaseline = totalBeds * pillowcasesPerBed;
+      const towelsNeededBaseline = numBathrooms * towelsPerBathroom;
+
+      // Adjust for occupancy & change frequency:
+      // Effective daily usage = baseline * occupancyRate / changeFreq
+      const sheetsUsedDaily = sheetsNeededBaseline * occupancyRate / changeFreq;
+      const pillowcasesUsedDaily = pillowcasesNeededBaseline * occupancyRate / changeFreq;
+      const towelsUsedDaily = towelsNeededBaseline * occupancyRate / changeFreq;
+
+      // Now consider laundry turnaround:
+      // You need enough stock so that while items are being laundered, there’s stock to cover “turnaround” days
+      const sheetsInCycle = sheetsUsedDaily * (turnaround + 1);
+      const pillowcasesInCycle = pillowcasesUsedDaily * (turnaround + 1);
+      const towelsInCycle = towelsUsedDaily * (turnaround + 1);
+
+      // Add loss/damage buffer
+      const sheetsFinal = sheetsInCycle * (1 + lossRate);
+      const pillowcasesFinal = pillowcasesInCycle * (1 + lossRate);
+      const towelsFinal = towelsInCycle * (1 + lossRate);
+
+      // Round up
+      const finalSheets = Math.ceil(sheetsFinal);
+      const finalPillowcases = Math.ceil(pillowcasesFinal);
+      const finalTowels = Math.ceil(towelsFinal);
+
+      // Show results
+      const ul = document.getElementById('resultsList');
+      ul.innerHTML = '';
+      [
+        { name: 'Sheets (flat/fitted)', qty: finalSheets },
+        { name: 'Pillowcases', qty: finalPillowcases },
+        { name: 'Towels (all types)', qty: finalTowels }
+      ].forEach(item => {
         const li = document.createElement('li');
-        li.textContent = `${item.name}: ${Math.ceil(total)} units`;
-        resultsList.appendChild(li);
+        li.textContent = `${item.name}: ${item.qty}`;
+        ul.appendChild(li);
       });
-
       document.getElementById('results').style.display = 'block';
     });
   </script>
