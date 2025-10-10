@@ -12,7 +12,7 @@
       padding: 0;
     }
     .container {
-      max-width: 800px;
+      max-width: 900px;
       margin: 40px auto;
       background: white;
       border-radius: 8px;
@@ -24,17 +24,17 @@
       margin-bottom: 24px;
     }
     .section {
-      margin-bottom: 24px;
-      border-bottom: 1px solid #ddd;
+      margin-bottom: 30px;
       padding-bottom: 24px;
+      border-bottom: 2px solid #ccc;
     }
     .section:last-child {
       border-bottom: none;
     }
     .section h2 {
       margin-top: 0;
-      font-size: 1.2em;
-      color: #333;
+      font-size: 1.3em;
+      color: #0052cc;
       margin-bottom: 16px;
     }
     .field-group {
@@ -57,6 +57,9 @@
       border-radius: 4px;
       font-size: 1em;
     }
+    .field input[disabled] {
+      background-color: #eee;
+    }
     button {
       display: block;
       width: 100%;
@@ -67,6 +70,7 @@
       font-size: 1.1em;
       cursor: pointer;
       border-radius: 4px;
+      margin-top: 16px;
     }
     button:hover {
       background-color: #003d99;
@@ -88,140 +92,64 @@
     .results li {
       margin-bottom: 10px;
     }
-    .export-buttons {
-      display: flex;
-      justify-content: space-between;
-      margin-top: 16px;
-      gap: 12px;
-    }
   </style>
 </head>
 <body>
   <div class="container">
     <h1>Hospitality Linen PAR Calculator</h1>
-    <form id="parForm">
-      <div class="section">
-        <h2>Room & Bed Info</h2>
-        <div class="field-group">
-          <div class="field">
-            <label for="numRooms">Number of Rooms</label>
-            <input type="number" id="numRooms" name="numRooms" min="1" value="1" required />
-          </div>
-          <div class="field">
-            <label for="bedKing">King Beds</label>
-            <input type="number" id="bedKing" name="bedKing" min="0" value="0" />
-          </div>
-          <div class="field">
-            <label for="bedQueen">Queen Beds</label>
-            <input type="number" id="bedQueen" name="bedQueen" min="0" value="0" />
-          </div>
+    
+    <!-- Section: General Vacation Rental Variables -->
+    <div class="section">
+      <h2>General Property Info</h2>
+      <div class="field-group">
+        <div class="field">
+          <label for="numRooms">Number of Guest Rooms</label>
+          <input type="number" id="numRooms" name="numRooms" min="1" value="1" required />
         </div>
         <div class="field">
-          <label for="sheetSetup">Sheet Setup</label>
-          <select id="sheetSetup" name="sheetSetup">
-            <option value="twoFlats">Two Flat Sheets</option>
-            <option value="flatPlusFitted">Flat + Fitted</option>
-          </select>
-        </div>
-      </div>
-
-      <div class="section">
-        <h2>Towel Inventory (per Bathroom)</h2>
-        <div class="field-group">
-          <div class="field">
-            <label for="towelBath">Bath Towels</label>
-            <input type="number" id="towelBath" name="towelBath" min="0" value="0" />
-          </div>
-          <div class="field">
-            <label for="towelHand">Hand Towels</label>
-            <input type="number" id="towelHand" name="towelHand" min="0" value="0" />
-          </div>
-          <div class="field">
-            <label for="towelWash">Washcloths</label>
-            <input type="number" id="towelWash" name="towelWash" min="0" value="0" />
-          </div>
-          <div class="field">
-            <label for="towelMat">Bath Mats</label>
-            <input type="number" id="towelMat" name="towelMat" min="0" value="0" />
-          </div>
+          <label for="occupancy">Occupancy Rate (%)</label>
+          <input type="number" id="occupancy" name="occupancy" min="0" max="100" value="100" />
         </div>
         <div class="field">
-          <label for="numBathrooms">Number of Bathrooms</label>
-          <input type="number" id="numBathrooms" name="numBathrooms" min="1" value="1" required />
+          <label for="parLevel">Desired PAR Level</label>
+          <input type="number" id="parLevel" name="parLevel" min="1" value="3" />
         </div>
-      </div>
-
-      <button type="submit">Calculate Requirements</button>
-    </form>
-
-    <div class="results" id="results" style="display: none;">
-      <h2>Estimated Linen Requirements</h2>
-      <ul id="resultsList"></ul>
-      <div class="export-buttons">
-        <button onclick="downloadPDF()">Export to PDF</button>
-        <button onclick="emailResults()">Email Results</button>
       </div>
     </div>
-  </div>
 
-  <script>
-    function calculateLinen() {
-      const rooms = parseInt(document.getElementById('numRooms').value, 10) || 1;
-      const bathrooms = parseInt(document.getElementById('numBathrooms').value, 10) || 1;
-      const bedKing = parseInt(document.getElementById('bedKing').value, 10) || 0;
-      const bedQueen = parseInt(document.getElementById('bedQueen').value, 10) || 0;
-      const sheetSetup = document.getElementById('sheetSetup').value;
-
-      const towelBath = parseInt(document.getElementById('towelBath').value, 10) || 0;
-      const towelHand = parseInt(document.getElementById('towelHand').value, 10) || 0;
-      const towelWash = parseInt(document.getElementById('towelWash').value, 10) || 0;
-      const towelMat = parseInt(document.getElementById('towelMat').value, 10) || 0;
-
-      const totalBeds = bedKing + bedQueen;
-      const sheetCount = sheetSetup === 'twoFlats' ? 2 : 2; // still 2 pieces per bed (1 fitted + 1 flat or 2 flats)
-      const totalSheets = sheetCount * totalBeds;
-      const pillowcases = 2 * totalBeds;
-
-      const results = {
-        'Sheets': totalSheets,
-        'Pillowcases': pillowcases,
-        'Bath Towels': towelBath * bathrooms,
-        'Hand Towels': towelHand * bathrooms,
-        'Washcloths': towelWash * bathrooms,
-        'Bath Mats': towelMat * bathrooms
-      };
-
-      return results;
-    }
-
-    document.getElementById('parForm').addEventListener('submit', function (e) {
-      e.preventDefault();
-      const results = calculateLinen();
-      const ul = document.getElementById('resultsList');
-      ul.innerHTML = '';
-      for (const key in results) {
-        const li = document.createElement('li');
-        li.textContent = `${key}: ${results[key]} units`;
-        ul.appendChild(li);
-      }
-      document.getElementById('results').style.display = 'block';
-    });
-
-    function downloadPDF() {
-      const results = calculateLinen();
-      const text = Object.entries(results).map(([k, v]) => `${k}: ${v} units`).join('\n');
-      const blob = new Blob([text], { type: 'application/pdf' });
-      const link = document.createElement('a');
-      link.href = URL.createObjectURL(blob);
-      link.download = 'linen_par_results.pdf';
-      link.click();
-    }
-
-    function emailResults() {
-      const results = calculateLinen();
-      const body = Object.entries(results).map(([k, v]) => `${k}: ${v} units`).join('%0D%0A');
-      window.location.href = `mailto:?subject=Linen PAR Results&body=${body}`;
-    }
-  </script>
-</body>
-</html>
+    <!-- Section: Bedding -->
+    <div class="section">
+      <h2>Bedding Inventory</h2>
+      <div class="field">
+        <label for="sheetSetup">Sheet Setup</label>
+        <select id="sheetSetup" name="sheetSetup" onchange="toggleFittedInputs()">
+          <option value="twoFlats">Two Flat Sheets</option>
+          <option value="flatPlusFitted">Flat + Fitted</option>
+        </select>
+      </div>
+      <div class="field-group">
+        <div class="field">
+          <label for="bedKing">King Beds</label>
+          <input type="number" id="bedKing" name="bedKing" min="0" value="0" />
+        </div>
+        <div class="field">
+          <label for="bedCalKing">California King Beds</label>
+          <input type="number" id="bedCalKing" name="bedCalKing" min="0" value="0" />
+        </div>
+        <div class="field">
+          <label for="bedQueen">Queen Beds</label>
+          <input type="number" id="bedQueen" name="bedQueen" min="0" value="0" />
+        </div>
+        <div class="field">
+          <label for="bedFull">Full/Double Beds</label>
+          <input type="number" id="bedFull" name="bedFull" min="0" value="0" />
+        </div>
+        <div class="field">
+          <label for="bedTwin">Twin Beds</label>
+          <input type="number" id="bedTwin" name="bedTwin" min="0" value="0" />
+        </div>
+      </div>
+      <div class="field-group">
+        <div class="field">
+          <label for="pillowKing">King Pillowcases</label>
+          <input type="nu
