@@ -1,0 +1,627 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Liberty Linen PAR Calculator v4.1</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <style>
+    :root{
+      --french-blue:#3A6EA5;
+      --slate-navy:#1E2A38;
+      --card:#ffffff;
+      --ink:#1E2A38;
+      --muted:#667085;
+      --soft:#f5f8ff;
+    }
+    *{box-sizing:border-box}
+    body{
+      font-family:'Inter',system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
+      background:linear-gradient(90deg,var(--french-blue),var(--slate-navy));
+      margin:0;padding:0;color:#333;
+    }
+    .container{
+      max-width:1180px;margin:40px auto;background:var(--card);
+      border-radius:14px;box-shadow:0 10px 30px rgba(0,0,0,.12);
+      padding:36px 32px;
+    }
+    .logo-header{display:flex;justify-content:center;align-items:center;gap:16px;margin-bottom:20px}
+    .logo-header img{max-width:260px;height:auto}
+    h1{margin:6px 0 26px;text-align:center;color:var(--slate-navy);font-size:2rem}
+    .section{
+      margin:28px 0 40px;background:var(--soft);border-left:6px solid var(--french-blue);
+      border-radius:8px;padding:20px 20px;
+    }
+    .section h2{margin:0;color:var(--french-blue);font-size:1.25rem}
+    .field-group{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:18px;margin-top:16px}
+    .field{display:flex;flex-direction:column}
+    .field label{font-weight:600;margin-bottom:6px;color:var(--ink)}
+    .field input,.field select{
+      padding:10px 12px;border:1px solid #d0d5dd;border-radius:8px;font-size:1rem;background:#fff
+    }
+    .field input[disabled]{background:#eef1f6}
+    .radio-toggle{display:flex;gap:22px;margin-top:10px;font-weight:600}
+    .radio-toggle input{margin-right:8px}
+    .hint{color:var(--muted);font-size:.9rem;margin-top:6px}
+    button{
+      background:var(--slate-navy);color:#fff;border:none;border-radius:8px;
+      padding:14px 18px;font-size:1.05rem;margin-top:18px;cursor:pointer
+    }
+    button:hover{background:var(--french-blue)}
+    .results{margin-top:28px;background:#e9f1ff;padding:18px;border-radius:8px;display:none}
+    .results h2{color:var(--slate-navy);margin:0 0 10px}
+    table{width:100%;border-collapse:collapse}
+    .results-table th,.results-table td{padding:10px;text-align:left}
+    .results-table th{border-bottom:2px solid var(--slate-navy);color:var(--slate-navy)}
+    .results-table td{border-bottom:1px solid #c9d4e8}
+    .export-buttons{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-top:16px}
+    .branding{text-align:center;margin-top:26px;color:#98a2b3;font-weight:500;font-size:.9rem}
+    a{color:var(--french-blue);text-decoration:none}
+    .pillows-title{font-weight:700;color:var(--ink);margin-top:6px}
+    .pillows-grid{display:grid;grid-template-columns:1fr;gap:16px;margin-top:12px}
+    .pillows-item{display:grid;grid-template-columns:220px 1fr 1fr;gap:12px;align-items:start}
+    .checkbox-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;background:#fff;border:1px solid #d0d5dd;border-radius:8px;padding:12px}
+    .checkbox-grid label{font-weight:500}
+    @media(max-width:900px){.pillows-item{grid-template-columns:1fr}}
+    /* Top of bed */
+    .toggle-row{display:flex;align-items:center;gap:10px;margin-top:8px}
+    .collapsed{display:none}
+    .top-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:12px}
+    @media(max-width:900px){.top-grid{grid-template-columns:1fr 1fr}}
+    /* Pricing */
+    .pricing{display:none;background:#fff;border:1px solid #d0d5dd;border-radius:10px;padding:16px;margin-top:18px}
+    .pricing h3{margin:0 0 8px;color:var(--slate-navy)}
+    .pricing-table th,.pricing-table td{padding:8px;border-bottom:1px solid #eef1f6}
+    .pricing-table th{color:var(--slate-navy)}
+    .right{text-align:right}
+    .subtotal-row td{font-weight:700}
+    .muted{color:#98a2b3;font-size:.9rem}
+    input[type="number"]::-webkit-outer-spin-button,
+    input[type="number"]::-webkit-inner-spin-button{ -webkit-appearance: none; margin: 0; }
+    input[type="number"]{ -moz-appearance: textfield; }
+    /* Pillows mapping grid */
+    .pillow-map{width:100%;border:1px solid #d0d5dd;border-radius:10px;background:#fff;margin-top:12px}
+    .pillow-map thead th{background:#f3f6ff;color:var(--slate-navy);padding:10px;text-align:left}
+    .pillow-map td{padding:10px;border-top:1px solid #eef1f6}
+    .pillow-map select{width:100%}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="logo-header">
+      <img src="https://raw.githubusercontent.com/campbell3cw/Hospitality-Par-Calculater/main/public/Liberty%20Logo.jpg" alt="Liberty Linen Logo">
+    </div>
+    <h1>Hospitality PAR Calculator</h1>
+
+    <div class="section">
+      <h2>General Property Info</h2>
+      <div class="field-group">
+        <div class="field"><label for="numRooms">Guest Rooms</label><input type="number" id="numRooms" value="1" min="0"/></div>
+        <div class="field"><label for="occupancy">Occupancy (%)</label><input type="number" id="occupancy" value="100" min="0" max="100"/></div>
+        <div class="field"><label for="parLevel">PAR Level</label><input type="number" id="parLevel" value="3" min="1"/></div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>Bedding Inventory</h2>
+      <div class="radio-toggle">
+        <label><input type="radio" name="sheetSetup" value="twoFlats" checked> Two Flat Sheets</label>
+        <label><input type="radio" name="sheetSetup" value="flatFitted"> Flat + Fitted</label>
+      </div>
+      <div class="field-group">
+        <div class="field"><label>King Beds</label><input type="number" id="bedKing" value="0" min="0"/></div>
+        <div class="field"><label>Cal King Beds</label><input type="number" id="bedCalKing" value="0" min="0"/></div>
+        <div class="field"><label>Queen Beds</label><input type="number" id="bedQueen" value="0" min="0"/></div>
+        <div class="field"><label>Full Beds</label><input type="number" id="bedFull" value="0" min="0"/></div>
+        <div class="field"><label>Twin Beds</label><input type="number" id="bedTwin" value="0" min="0"/></div>
+      </div>
+      <div class="hint">If "Flat + Fitted" is selected, Fitted quantities will mirror the flat counts for each bed size. Selecting "Two Flat Sheets" will grey out and zero Fitted fields.</div>
+      <div class="field-group">
+        <div class="field"><label>Fitted King</label><input type="number" id="fittedKing" value="0" min="0" /></div>
+        <div class="field"><label>Fitted Cal King</label><input type="number" id="fittedCalKing" value="0" min="0" /></div>
+        <div class="field"><label>Fitted Queen</label><input type="number" id="fittedQueen" value="0" min="0" /></div>
+        <div class="field"><label>Fitted Full</label><input type="number" id="fittedFull" value="0" min="0" /></div>
+        <div class="field"><label>Fitted Twin</label><input type="number" id="fittedTwin" value="0" min="0" /></div>
+      </div>
+
+      <!-- New Pillow Mapping Grid -->
+      <div class="pillows-title">Pillowcases</div>
+      <table class="pillow-map" id="pillowMap">
+        <thead>
+          <tr><th>Bed Size</th><th>Pillow Size Used</th><th>Pillows per Bed</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>King</td>
+            <td>
+              <select id="pm-King-size">
+                <option value="King" selected>King</option>
+                <option value="Queen">Queen</option>
+                <option value="Standard">Standard</option>
+              </select>
+            </td>
+            <td>
+              <select id="pm-King-ppb">
+                <option>1</option><option selected>2</option><option>3</option><option>4</option>
+              </select>
+            </td>
+          </tr>
+          <tr>
+            <td>Cal King</td>
+            <td>
+              <select id="pm-CalKing-size">
+                <option value="King" selected>King</option>
+                <option value="Queen">Queen</option>
+                <option value="Standard">Standard</option>
+              </select>
+            </td>
+            <td>
+              <select id="pm-CalKing-ppb">
+                <option>1</option><option selected>2</option><option>3</option><option>4</option>
+              </select>
+            </td>
+          </tr>
+          <tr>
+            <td>Queen</td>
+            <td>
+              <select id="pm-Queen-size">
+                <option value="King">King</option>
+                <option value="Queen" selected>Queen</option>
+                <option value="Standard">Standard</option>
+              </select>
+            </td>
+            <td>
+              <select id="pm-Queen-ppb">
+                <option>1</option><option selected>2</option><option>3</option><option>4</option>
+              </select>
+            </td>
+          </tr>
+          <tr>
+            <td>Full</td>
+            <td>
+              <select id="pm-Full-size">
+                <option value="King">King</option>
+                <option value="Queen">Queen</option>
+                <option value="Standard" selected>Standard</option>
+              </select>
+            </td>
+            <td>
+              <select id="pm-Full-ppb">
+                <option>1</option><option selected>2</option><option>3</option><option>4</option>
+              </select>
+            </td>
+          </tr>
+          <tr>
+            <td>Twin</td>
+            <td>
+              <select id="pm-Twin-size">
+                <option value="King">King</option>
+                <option value="Queen">Queen</option>
+                <option value="Standard" selected>Standard</option>
+              </select>
+            </td>
+            <td>
+              <select id="pm-Twin-ppb">
+                <option>1</option><option selected>2</option><option>3</option><option>4</option>
+              </select>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="section">
+      <h2>Terry Inventory</h2>
+      <div class="field-group">
+        <div class="field"><label>Bathrooms per Room</label><input type="number" id="numBathrooms" value="1" min="0"/></div>
+        <div class="field"><label>Bath Towels</label><input type="number" id="towelBath" value="0" min="0"/></div>
+        <div class="field"><label>Hand Towels</label><input type="number" id="towelHand" value="0" min="0"/></div>
+        <div class="field"><label>Washcloths</label><input type="number" id="towelWash" value="0" min="0"/></div>
+        <div class="field"><label>Bath Mats</label><input type="number" id="towelMat" value="0" min="0"/></div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>Top of the Bed (optional)</h2>
+      <div class="toggle-row">
+        <label><input type="checkbox" id="includeTop" /> Include Top-of-Bed products</label>
+      </div>
+      <div id="topBedPanel" class="collapsed">
+        <div class="hint">Quantities auto-fill from bed counts. Edit if needed. Values are per size, multiplied by PAR.</div>
+        <!-- Top Sheet -->
+        <div class="pillows-title" style="margin-top:16px">Top Sheet</div>
+        <div class="top-grid">
+          <div class="field"><label>King</label><input type="number" id="tsKing" value="0" min="0"/></div>
+          <div class="field"><label>Queen</label><input type="number" id="tsQueen" value="0" min="0"/></div>
+          <div class="field"><label>Full</label><input type="number" id="tsFull" value="0" min="0"/></div>
+          <div class="field"><label>Twin</label><input type="number" id="tsTwin" value="0" min="0"/></div>
+        </div>
+        <!-- Coverlet -->
+        <div class="pillows-title" style="margin-top:10px">Coverlet</div>
+        <div class="top-grid">
+          <div class="field"><label>King</label><input type="number" id="cvKing" value="0" min="0"/></div>
+          <div class="field"><label>Queen</label><input type="number" id="cvQueen" value="0" min="0"/></div>
+          <div class="field"><label>Full</label><input type="number" id="cvFull" value="0" min="0"/></div>
+          <div class="field"><label>Twin</label><input type="number" id="cvTwin" value="0" min="0"/></div>
+        </div>
+        <!-- Filled Blanket -->
+        <div class="pillows-title" style="margin-top:10px">Filled Blanket</div>
+        <div class="top-grid">
+          <div class="field"><label>King</label><input type="number" id="fbKing" value="0" min="0"/></div>
+          <div class="field"><label>Queen</label><input type="number" id="fbQueen" value="0" min="0"/></div>
+          <div class="field"><label>Full</label><input type="number" id="fbFull" value="0" min="0"/></div>
+          <div class="field"><label>Twin</label><input type="number" id="fbTwin" value="0" min="0"/></div>
+        </div>
+        <!-- Duvet / Insert -->
+        <div class="pillows-title" style="margin-top:10px">Duvet / Insert</div>
+        <div class="top-grid">
+          <div class="field"><label>King</label><input type="number" id="dvKing" value="0" min="0"/></div>
+          <div class="field"><label>Queen</label><input type="number" id="dvQueen" value="0" min="0"/></div>
+          <div class="field"><label>Full</label><input type="number" id="dvFull" value="0" min="0"/></div>
+          <div class="field"><label>Twin</label><input type="number" id="dvTwin" value="0" min="0"/></div>
+        </div>
+      </div>
+    </div>
+
+    <button id="calcBtn" onclick="calculateResults()">Calculate Requirements</button>
+
+    <div class="results" id="results">
+      <h2>Estimated Linen Requirements</h2>
+      <div id="summaryInfo"></div>
+      <table class="results-table" id="resultsTable"></table>
+
+      <!-- Pricing -->
+      <div class="pricing" id="pricing">
+        <h3>Pricing</h3>
+        <table class="pricing-table" id="pricingTable">
+          <thead>
+            <tr>
+              <th>Category</th>
+              <th>Item</th>
+              <th class="right">Qty (units)</th>
+              <th class="right">Qty (dozens)</th>
+              <th class="right">Price / Each</th>
+              <th class="right">Price / Dozen</th>
+              <th class="right">Subtotal (Dozens)</th>
+            </tr>
+          </thead>
+          <tbody id="pricingBody"></tbody>
+          <tbody id="pricingSubtotals"></tbody>
+          <tfoot>
+            <tr class="subtotal-row">
+              <td colspan="6" class="right">Grand Total</td>
+              <td class="right" id="grandTotal">$0.00</td>
+            </tr>
+            <tr>
+              <td colspan="7" class="muted right">* Sales tax not included</td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+
+      <div class="export-buttons">
+        <button onclick="exportPDF()">Export to PDF</button>
+        <button onclick="emailResults()">Email Results</button>
+      </div>
+    </div>
+
+    <div class="branding">Powered by Liberty Linen · Orange Beach, AL · <a href="https://www.libertylinen.com">libertylinen.com</a></div>
+  </div>
+
+  <script>
+    // --- Helpers ---
+    function getBedsMap(){
+      return {
+        King: +document.getElementById('bedKing').value || 0,
+        CalKing: +document.getElementById('bedCalKing').value || 0,
+        Queen: +document.getElementById('bedQueen').value || 0,
+        Full: +document.getElementById('bedFull').value || 0,
+        Twin: +document.getElementById('bedTwin').value || 0,
+      };
+    }
+    function ceilDozens(units){ return Math.ceil((+units||0)/12); }
+    function toUSD(n){ return (isNaN(n)?0:n).toLocaleString(undefined,{style:'currency',currency:'USD'}); }
+
+    function toggleFitted(){
+      const selected = document.querySelector('input[name="sheetSetup"]:checked');
+      if(!selected) return;
+      const twoFlats = selected.value === 'twoFlats';
+      const pairs = [
+        ['fittedKing','bedKing'],
+        ['fittedCalKing','bedCalKing'],
+        ['fittedQueen','bedQueen'],
+        ['fittedFull','bedFull'],
+        ['fittedTwin','bedTwin'],
+      ];
+      pairs.forEach(([fittedId, bedId])=>{
+        const fittedEl = document.getElementById(fittedId);
+        const bedEl = document.getElementById(bedId);
+        fittedEl.disabled = twoFlats;
+        fittedEl.value = twoFlats ? 0 : (+bedEl.value || 0);
+      });
+    }
+
+    // Pillows from mapping table
+    function computePillowcaseUnitsBySize(){
+      const map = getBedsMap();
+      const rows = [
+        ['King','pm-King-size','pm-King-ppb'],
+        ['CalKing','pm-CalKing-size','pm-CalKing-ppb'],
+        ['Queen','pm-Queen-size','pm-Queen-ppb'],
+        ['Full','pm-Full-size','pm-Full-ppb'],
+        ['Twin','pm-Twin-size','pm-Twin-ppb'],
+      ];
+      const totals = {King:0, Queen:0, Standard:0};
+      rows.forEach(([bedSize, sizeSelId, ppbSelId])=>{
+        const pillowSize = document.getElementById(sizeSelId).value;
+        const ppb = +document.getElementById(ppbSelId).value;
+        const beds = map[bedSize] || 0;
+        totals[pillowSize] += beds * ppb;
+      });
+      return totals;
+    }
+
+    function autofillTopOfBed(){
+      const map = getBedsMap();
+      [['tsKing','King'],['tsQueen','Queen'],['tsFull','Full'],['tsTwin','Twin'],
+       ['cvKing','King'],['cvQueen','Queen'],['cvFull','Full'],['cvTwin','Twin'],
+       ['fbKing','King'],['fbQueen','Queen'],['fbFull','Full'],['fbTwin','Twin'],
+       ['dvKing','King'],['dvQueen','Queen'],['dvFull','Full'],['dvTwin','Twin']]
+       .forEach(([id,size])=>{ document.getElementById(id).value = map[size] || 0; });
+    }
+
+    function computeResults(){
+      const par = +document.getElementById('parLevel').value || 1;
+      const rooms = +document.getElementById('numRooms').value || 1;
+      const bedsMap = getBedsMap();
+      const isFlatFitted = (document.querySelector('input[name="sheetSetup"]:checked')?.value === 'flatFitted');
+
+      const results = { Bedding:{}, TopOfBed:{}, Terry:{} };
+
+      ['King','CalKing','Queen','Full','Twin'].forEach(size=>{
+        const beds = bedsMap[size] || 0;
+        if(beds>0){
+          if(isFlatFitted){
+            results.Bedding[`Flat Sheets (${size})`] = beds * par;
+            results.Bedding[`Fitted Sheets (${size})`] = (+document.getElementById('fitted'+size).value || 0) * par;
+          }else{
+            results.Bedding[`Flat Sheets (${size})`] = beds * 2 * par;
+          }
+        }
+      });
+
+      const pillowUnits = computePillowcaseUnitsBySize();
+      if(pillowUnits.King>0) results.Bedding['King Pillowcases'] = pillowUnits.King * par;
+      if(pillowUnits.Queen>0) results.Bedding['Queen Pillowcases'] = pillowUnits.Queen * par;
+      if(pillowUnits.Standard>0) results.Bedding['Standard Pillowcases'] = pillowUnits.Standard * par;
+
+      if(document.getElementById('includeTop').checked){
+        [['Top Sheet (King)','tsKing'],['Top Sheet (Queen)','tsQueen'],['Top Sheet (Full)','tsFull'],['Top Sheet (Twin)','tsTwin'],
+         ['Coverlet (King)','cvKing'],['Coverlet (Queen)','cvQueen'],['Coverlet (Full)','cvFull'],['Coverlet (Twin)','cvTwin'],
+         ['Filled Blanket (King)','fbKing'],['Filled Blanket (Queen)','fbQueen'],['Filled Blanket (Full)','fbFull'],['Filled Blanket (Twin)','fbTwin'],
+         ['Duvet / Insert (King)','dvKing'],['Duvet / Insert (Queen)','dvQueen'],['Duvet / Insert (Full)','dvFull'],['Duvet / Insert (Twin)','dvTwin']]
+         .forEach(([label,id])=>{
+           const qty = (+document.getElementById(id).value || 0) * par;
+           if(qty>0) results.TopOfBed[label] = qty;
+         });
+      }
+
+      const baths = +document.getElementById('numBathrooms').value || 1;
+      const tBath = (+document.getElementById('towelBath').value || 0) * baths * rooms * par;
+      const tHand = (+document.getElementById('towelHand').value || 0) * baths * rooms * par;
+      const tWash = (+document.getElementById('towelWash').value || 0) * baths * rooms * par;
+      const tMat  = (+document.getElementById('towelMat').value  || 0) * baths * rooms * par;
+      if(tBath>0) results.Terry['Bath Towels'] = tBath;
+      if(tHand>0) results.Terry['Hand Towels'] = tHand;
+      if(tWash>0) results.Terry['Washcloths'] = tWash;
+      if(tMat>0)  results.Terry['Bath Mats'] = tMat;
+
+      return results;
+    }
+
+    function renderResults(results){
+      const table = document.getElementById('resultsTable');
+      table.innerHTML='';
+      Object.entries(results).forEach(([section, items])=>{
+        const keys = Object.keys(items);
+        if(keys.length===0) return;
+        const headerRow = document.createElement('tr');
+        headerRow.innerHTML = `<th colspan="2">${section}</th>`;
+        table.appendChild(headerRow);
+        keys.forEach(key=>{
+          const qty = items[key];
+          if(qty<=0) return;
+          const row = document.createElement('tr');
+          row.innerHTML = `<td>${key}</td><td>${qty} units</td>`;
+          table.appendChild(row);
+        });
+      });
+    }
+
+    let priceCache = {};
+    function buildPricing(results){
+      const pricing = document.getElementById('pricing');
+      const body = document.getElementById('pricingBody');
+      const subs = document.getElementById('pricingSubtotals');
+      body.innerHTML=''; subs.innerHTML='';
+
+      const rows = [];
+      Object.entries(results).forEach(([cat, items])=>{
+        Object.entries(items).forEach(([label, qty])=> rows.push({cat,label,qty}));
+      });
+      if(rows.length===0){ pricing.style.display='none'; return; }
+      pricing.style.display='block';
+
+      rows.forEach((r,i)=>{
+        const dozens = ceilDozens(r.qty);
+        const cache = priceCache[r.label] || {each:'', dozen:''};
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${r.cat}</td>
+          <td>${r.label}</td>
+          <td class="right">${r.qty}</td>
+          <td class="right">${dozens}</td>
+          <td class="right"><input type="number" min="0" step="0.01" data-row="${i}" data-label="${r.label}" data-kind="each" class="price-input" style="width:110px;text-align:right" value="${cache.each}"></td>
+          <td class="right"><input type="number" min="0" step="0.01" data-row="${i}" data-label="${r.label}" data-kind="dozen" class="price-input" style="width:110px;text-align:right" value="${cache.dozen}"></td>
+          <td class="right" id="subtotal-${i}">$0.00</td>
+        `;
+        body.appendChild(tr);
+      });
+
+      ['Bedding','TopOfBed','Terry'].forEach(cat=>{
+        const tr = document.createElement('tr');
+        tr.className='subtotal-row';
+        tr.innerHTML = `<td colspan="6" class="right">${cat} Subtotal</td><td class="right" id="sub-${cat}">$0.00</td>`;
+        subs.appendChild(tr);
+      });
+
+      body.querySelectorAll('.price-input').forEach(inp=>{
+        inp.addEventListener('input', onPriceChange);
+      });
+
+      recalcTotals();
+    }
+
+    function onPriceChange(e){
+      const inp = e.target;
+      const label = inp.dataset.label;
+      const kind = inp.dataset.kind;
+      const value = parseFloat(inp.value);
+      if(!priceCache[label]) priceCache[label] = {each:'', dozen:''};
+      if(!isNaN(value)){
+        priceCache[label][kind] = value.toFixed(2);
+        const row = inp.closest('tr');
+        if(kind==='each'){
+          priceCache[label].dozen = (value*12).toFixed(2);
+          row.querySelector('input[data-kind="dozen"]').value = priceCache[label].dozen;
+        }else{
+          priceCache[label].each = (value/12).toFixed(4);
+          row.querySelector('input[data-kind="each"]').value = priceCache[label].each;
+        }
+      }else{
+        priceCache[label][kind] = '';
+      }
+      recalcTotals();
+    }
+
+    function recalcTotals(){
+      const body = document.getElementById('pricingBody');
+      const rows = Array.from(body.querySelectorAll('tr'));
+      const catTotals = {Bedding:0, TopOfBed:0, Terry:0};
+      let grand = 0;
+      rows.forEach((tr,i)=>{
+        const tds = tr.querySelectorAll('td');
+        const cat = tds[0].textContent;
+        const dozens = parseFloat(tds[3].textContent) || 0;
+        const doz = parseFloat(tr.querySelector('input[data-kind="dozen"]').value) || 0;
+        const subtotal = dozens*doz;
+        document.getElementById(`subtotal-${i}`).textContent = toUSD(subtotal);
+        catTotals[cat] = (catTotals[cat]||0) + subtotal;
+        grand += subtotal;
+      });
+      ['Bedding','TopOfBed','Terry'].forEach(cat=>{
+        const el = document.getElementById(`sub-${cat}`);
+        if(el) el.textContent = toUSD(catTotals[cat]||0);
+      });
+      document.getElementById('grandTotal').textContent = toUSD(grand);
+    }
+
+    function calculateResults(){
+      const par = +document.getElementById('parLevel').value || 1;
+      const rooms = +document.getElementById('numRooms').value || 1;
+      const occ = +document.getElementById('occupancy').value || 100;
+
+      const results = computeResults();
+      renderResults(results);
+
+      const date = new Date().toLocaleDateString();
+      const summaryInfo = document.getElementById('summaryInfo');
+      summaryInfo.innerHTML = `<p><strong>Guest Rooms:</strong> ${rooms} | <strong>Occupancy:</strong> ${occ}% | <strong>PAR:</strong> ${par}</p><p><em>Generated on ${date}</em></p>`;
+      document.getElementById('results').style.display = 'block';
+
+      buildPricing(results);
+    }
+
+    function exportPDF(){
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF();
+      const logo = "https://raw.githubusercontent.com/campbell3cw/Hospitality-Par-Calculater/main/public/Liberty%20Logo.jpg";
+
+      doc.addImage(logo,'JPEG',20,10,30,24);
+      doc.setFontSize(16);
+      doc.text('Liberty Linen - Estimated Linen Requirements', 60, 20);
+      doc.setFontSize(11);
+      doc.text('Including pricing summary', 60, 27);
+
+      let y=38;
+      const addLine=(t)=>{ if(y>270){doc.addPage(); y=20;} doc.text(t,20,y); y+=7; };
+
+      document.querySelectorAll('#summaryInfo p').forEach(p=> addLine(p.textContent) );
+      document.querySelectorAll('#resultsTable tr').forEach(tr=>{
+        const cells = tr.querySelectorAll('th,td');
+        if(cells.length===1){ addLine(cells[0].textContent); }
+        else { addLine(`${cells[0].textContent} .... ${cells[1].textContent}`); }
+      });
+
+      y+=6; doc.setFontSize(14); addLine('Pricing Summary (Dozens)'); doc.setFontSize(11);
+      document.querySelectorAll('#pricingBody tr').forEach((tr,i)=>{
+        const tds = tr.querySelectorAll('td');
+        const item = `${tds[0].textContent} - ${tds[1].textContent}`;
+        const dozens = tds[3].textContent;
+        const each = tr.querySelector('input[data-kind="each"]').value || '0.00';
+        const doz = tr.querySelector('input[data-kind="dozen"]').value || '0.00';
+        const subtotal = document.getElementById(`subtotal-${i}`).textContent;
+        addLine(`${item} | ${dozens} dz | $/ea: ${each} | $/dz: ${doz} | Subtotal: ${subtotal}`);
+      });
+
+      const beddingSub = document.getElementById('sub-Bedding')?.textContent || '$0.00';
+      const topSub = document.getElementById('sub-TopOfBed')?.textContent || '$0.00';
+      const terrySub = document.getElementById('sub-Terry')?.textContent || '$0.00';
+      const grand = document.getElementById('grandTotal')?.textContent || '$0.00';
+      addLine(`Bedding Subtotal: ${beddingSub}`);
+      addLine(`Top of Bed Subtotal: ${topSub}`);
+      addLine(`Terry Subtotal: ${terrySub}`);
+      addLine(`Grand Total: ${grand}`);
+      addLine(`* Sales tax not included`);
+
+      doc.save('Liberty_Linen_PAR_Results.pdf');
+    }
+
+    function emailResults(){
+      exportPDF();
+      const subject = "What we need to buy from Liberty Linen!";
+      const summary = document.getElementById('summaryInfo').innerText;
+      const rows = Array.from(document.querySelectorAll('#resultsTable tr')).map(r=>r.innerText).join('%0D%0A');
+      const pricingRows = Array.from(document.querySelectorAll('#pricingBody tr')).map((tr,i)=>{
+        const tds = tr.querySelectorAll('td');
+        const each = tr.querySelector('input[data-kind="each"]').value || '0.00';
+        const doz = tr.querySelector('input[data-kind="dozen"]').value || '0.00';
+        const sub = document.getElementById('subtotal-'+i).textContent;
+        return `${tds[0].textContent} - ${tds[1].textContent} | ${tds[3].textContent} dz | $/ea ${each} | $/dz ${doz} | Subtotal ${sub}`;
+      }).join('%0D%0A');
+      const totals = `Bedding: ${document.getElementById('sub-Bedding')?.textContent||'$0.00'}, Top of Bed: ${document.getElementById('sub-TopOfBed')?.textContent||'$0.00'}, Terry: ${document.getElementById('sub-Terry')?.textContent||'$0.00'}, Grand: ${document.getElementById('grandTotal')?.textContent||'$0.00'} (sales tax not included)`;
+      const body = `${encodeURIComponent(summary)}%0D%0A%0D%0A${rows}%0D%0A%0D%0APricing (Dozens):%0D%0A${pricingRows}%0D%0A%0D%0A${totals}%0D%0A%0D%0A(Attach the PDF named "Liberty_Linen_PAR_Results.pdf" that just downloaded.)`;
+      window.location.href = `mailto:?subject=${encodeURIComponent(subject)}&body=${body}`;
+    }
+
+    document.addEventListener('DOMContentLoaded',()=>{
+      const includeTop = document.getElementById('includeTop');
+      const topPanel = document.getElementById('topBedPanel');
+      includeTop.addEventListener('change',()=>{
+        topPanel.classList.toggle('collapsed', !includeTop.checked);
+        if(includeTop.checked){ autofillTopOfBed(); }
+      });
+
+      toggleFitted();
+      document.querySelectorAll('input[name="sheetSetup"]').forEach(r=>r.addEventListener('change',toggleFitted));
+      ['bedKing','bedCalKing','bedQueen','bedFull','bedTwin'].forEach(id=>{
+        const el = document.getElementById(id);
+        el.addEventListener('input',()=>{ toggleFitted(); if(includeTop.checked){ autofillTopOfBed(); } });
+      });
+    });
+  </script>
+</body>
+</html>
