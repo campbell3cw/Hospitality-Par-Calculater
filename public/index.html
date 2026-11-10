@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Liberty Linen PAR Calculator v4.1</title>
+  <title>Liberty Linen PAR Calculator v4.2</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
@@ -87,6 +87,23 @@
     .pillow-map thead th{background:#f3f6ff;color:var(--slate-navy);padding:10px;text-align:left}
     .pillow-map td{padding:10px;border-top:1px solid #eef1f6}
     .pillow-map select{width:100%}
+    /* v4.2 Call to action */
+    .cta-card{margin-top:22px;background:linear-gradient(90deg,var(--french-blue),var(--slate-navy));color:#fff;border-radius:12px;padding:22px 24px;display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:16px;box-shadow:0 6px 18px rgba(30,42,56,.18)}
+    .cta-text{flex:1 1 320px}
+    .cta-card h3{margin:0 0 6px;color:#fff;font-size:1.3rem}
+    .cta-card p{margin:0;color:#dbe6f5;line-height:1.45}
+    .cta-actions{display:flex;flex-wrap:wrap;align-items:center;gap:10px}
+    .cta-btn{display:inline-block;padding:12px 18px;border-radius:8px;font-weight:600;font-size:1rem;line-height:1.2;text-decoration:none;margin-top:0;font-family:inherit}
+    .cta-primary{background:#fff;color:var(--slate-navy);border:2px solid #fff}
+    .cta-primary:hover{background:#e9f1ff;color:var(--slate-navy)}
+    .cta-secondary{background:transparent;color:#fff;border:2px solid #fff}
+    .cta-secondary:hover{background:rgba(255,255,255,.14)}
+    .cta-link{color:#fff;font-weight:600;text-decoration:underline;padding:0 4px}
+    .branding .cta-line{margin-top:6px;color:var(--slate-navy);font-weight:600}
+    @media(max-width:600px){
+      .cta-actions{width:100%;flex-direction:column;align-items:stretch}
+      .cta-btn,.cta-link{text-align:center;width:100%}
+    }
   </style>
 </head>
 <body>
@@ -306,9 +323,22 @@
         <button onclick="exportPDF()">Export to PDF</button>
         <button onclick="emailResults()">Email Results</button>
       </div>
+
+      <!-- v4.2 Call to action -->
+      <div class="cta-card" id="ctaCard">
+        <div class="cta-text">
+          <h3>Want Liberty Linen pricing on this list?</h3>
+          <p>Get a free quote. Send us these quantities and our team will put together pricing for your property.</p>
+        </div>
+        <div class="cta-actions">
+          <button type="button" id="quoteBtn" class="cta-btn cta-primary" onclick="requestQuote()">Request a Quote</button>
+          <a class="cta-btn cta-secondary" href="tel:+12519812872">Call 251-981-2872</a>
+          <a class="cta-link" href="https://www.libertylinen.com" target="_blank" rel="noopener">Visit libertylinen.com</a>
+        </div>
+      </div>
     </div>
 
-    <div class="branding">Powered by Liberty Linen · Orange Beach, AL · <a href="https://www.libertylinen.com">libertylinen.com</a></div>
+    <div class="branding">Powered by Liberty Linen · Orange Beach, AL · <a href="https://www.libertylinen.com">libertylinen.com</a><div class="cta-line">Need linens? <a href="mailto:orders@libertylinen.com?subject=Quote%20request%20from%20PAR%20Calculator" onclick="requestQuote(); return false;">Get a free quote</a> · <a href="tel:+12519812872">251-981-2872</a></div></div>
   </div>
 
   <script>
@@ -587,6 +617,17 @@
       addLine(`Grand Total: ${grand}`);
       addLine(`* Sales tax not included`);
 
+      // v4.2: quote call-to-action footer on every page
+      const ctaText = 'Get a quote from Liberty Linen: orders@libertylinen.com | 251-981-2872 | libertylinen.com';
+      const pageCount = doc.getNumberOfPages();
+      for(let p=1; p<=pageCount; p++){
+        doc.setPage(p);
+        doc.setFontSize(10);
+        doc.setTextColor(58,110,165);
+        doc.text(ctaText, 105, 288, {align:'center'});
+      }
+      doc.setTextColor(0,0,0);
+
       doc.save('Liberty_Linen_PAR_Results.pdf');
     }
 
@@ -605,6 +646,37 @@
       const totals = `Bedding: ${document.getElementById('sub-Bedding')?.textContent||'$0.00'}, Top of Bed: ${document.getElementById('sub-TopOfBed')?.textContent||'$0.00'}, Towel: ${document.getElementById('sub-Towel')?.textContent||'$0.00'}, Grand: ${document.getElementById('grandTotal')?.textContent||'$0.00'} (sales tax not included)`;
       const body = `${encodeURIComponent(summary)}%0D%0A%0D%0A${rows}%0D%0A%0D%0APricing (Dozens):%0D%0A${pricingRows}%0D%0A%0D%0A${totals}%0D%0A%0D%0A(Attach the PDF named "Liberty_Linen_PAR_Results.pdf" that just downloaded.)`;
       window.location.href = `mailto:?subject=${encodeURIComponent(subject)}&body=${body}`;
+    }
+
+    // v4.2: Request a Quote (opens an email to Liberty Linen with the required quantities)
+    function requestQuote(){
+      const par = +document.getElementById('parLevel').value || 1;
+      const rooms = +document.getElementById('numRooms').value || 1;
+      const occ = +document.getElementById('occupancy').value || 100;
+      const setup = document.querySelector('input[name="sheetSetup"]:checked')?.value === 'flatFitted' ? 'Flat + Fitted' : 'Two Flat Sheets';
+      const catNames = {Bedding:'Bedding', TopOfBed:'Top of the Bed', Terry:'Terry', Towel:'Towels'};
+      const results = computeResults();
+      const lines = [];
+      Object.entries(results).forEach(([cat, items])=>{
+        const keys = Object.keys(items).filter(k=>items[k]>0);
+        if(keys.length===0) return;
+        lines.push('', catNames[cat] || cat);
+        keys.forEach(k=> lines.push(`- ${k}: ${items[k]} units (${ceilDozens(items[k])} dz)`));
+      });
+      const body = [
+        'Hi Liberty Linen,',
+        '',
+        lines.length ? 'I would like a quote on the linens below from the PAR Calculator.' : 'I would like a quote on linens for my property.',
+        '',
+        'Company / Property name: ',
+        'Contact name: ',
+        'Phone: ',
+        'City / State: ',
+        '',
+        `Guest Rooms: ${rooms} | Occupancy: ${occ}% | PAR: ${par} | Sheets: ${setup}`
+      ].concat(lines).concat(['', 'Thank you!']).join('\r\n');
+      const subject = 'Quote request from PAR Calculator';
+      window.location.href = `mailto:orders@libertylinen.com?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
     }
 
     document.addEventListener('DOMContentLoaded',()=>{
